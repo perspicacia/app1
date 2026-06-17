@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>타이타닉 데이터 분석 & 윤리 노트북 플랫폼</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            950: '#020c1b',
+                            900: '#0a192f',
+                            800: '#112240',
+                            700: '#233554',
+                        },
+                        gold: {
+                            500: '#c5a059',
+                            400: '#dfb76c',
+                        },
+                        mint: '#64ffda'
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        montserrat: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a192f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #233554;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c5a059;
+        }
+        .notebook-card {
+            transition: all 0.3s ease;
+        }
+        .notebook-card:focus-within {
+            border-color: #c5a059;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(197, 160, 89, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-navy-950 text-slate-100 font-sans min-h-screen flex flex-col md:flex-row">
+
+    <!-- ================= SIDEBAR NAVIGATION ================= -->
+    <aside class="w-full md:w-80 bg-navy-900 border-r border-navy-800 flex flex-col justify-between shrink-0">
+        <div>
+            <!-- 헤더 타이틀 -->
+            <div class="p-6 border-b border-navy-800">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-anchor text-gold-500 text-3xl"></i>
+                    <div>
+                        <h1 class="font-montserrat font-extrabold text-xl tracking-wider text-slate-50">TITANIC</h1>
+                        <p class="text-xs text-gold-500 tracking-widest uppercase">Ethics & Analysis</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 메뉴 리스트 (생존예측기 대신 윤리 노트북 탑재) -->
+            <nav class="p-4 space-y-2">
+                <button onclick="switchTab('tab-story')" id="btn-story" class="nav-btn w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition duration-200 text-left text-gold-500 bg-navy-800 font-medium">
+                    <i class="fa-solid fa-compass-drafting text-lg"></i>
+                    <span>요구분석 & 개요</span>
+                </button>
+                <button onclick="switchTab('tab-dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition duration-200 text-left text-slate-400 hover:text-slate-100 hover:bg-navy-800/50 font-medium">
+                    <i class="fa-solid fa-chart-pie text-lg"></i>
+                    <span>인터랙티브 시각화</span>
+                </button>
+                <button onclick="switchTab('tab-explorer')" id="btn-explorer" class="nav-btn w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition duration-200 text-left text-slate-400 hover:text-slate-100 hover:bg-navy-800/50 font-medium">
+                    <i class="fa-solid fa-users-viewfinder text-lg"></i>
+                    <span>승객 데이터 탐색</span>
+                </button>
+                <button onclick="switchTab('tab-ethics')" id="btn-ethics" class="nav-btn w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition duration-200 text-left text-slate-400 hover:text-slate-100 hover:bg-navy-800/50 font-medium border-2 border-dashed border-gold-500/30 hover:border-gold-500 mt-6">
+                    <i class="fa-solid fa-feather-pointed text-lg text-gold-500"></i>
+                    <span class="text-gold-500 font-bold">생각하는 윤리 노트북</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- 하단 브랜드 정보 -->
+        <div class="p-6 border-t border-navy-800 bg-navy-950/40 text-center">
+            <p class="text-xs text-slate-500">Titanic Ethics Platform v1.5</p>
+            <p class="text-[10px] text-gold-500/60 mt-1">데이터 윤리 교육 시뮬레이션</p>
+        </div>
+    </aside>
+
+    <!-- ================= MAIN CONTENT AREA ================= -->
+    <main class="flex-grow p-6 md:p-10 overflow-y-auto max-h-screen">
+        
+        <!-- ================= TAB 1: STORY (요구분석 & 개요) ================= -->
+        <section id="tab-story" class="tab-content space-y-8">
+            <div class="border-b border-navy-800 pb-6">
+                <span class="text-gold-500 font-bold text-sm uppercase tracking-wider">PROJECT BACKGROUND</span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-50 mt-1">1. 요구 분석 및 프로젝트 목적</h2>
+            </div>
+
+            <!-- 요약 카드 그리드 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-navy-900 border border-navy-800 p-6 rounded-2xl">
+                    <div class="w-12 h-12 bg-teal-500/10 text-mint rounded-xl flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-chart-line text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-100 mb-2">실전 EDA 역량 확보</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">
+                        실제 결측치와 이상치가 혼재되어 있는 원시 데이터를 전처리하고, 유의미한 변수를 발굴하여 탐색적 데이터 분석(EDA) 능력을 강화하는 정석적인 과정입니다.
+                    </p>
+                </div>
+                <div class="bg-navy-900 border border-navy-800 p-6 rounded-2xl">
+                    <div class="w-12 h-12 bg-gold-500/10 text-gold-500 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-people-arrows text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-100 mb-2">위기 시 인간 행동 규명</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">
+                        성별, 연령대, 사회적 계급(객실 등급)과 같은 인구통계학적 배경이 극한의 상황에서 생존 가능성을 어떻게 결정했는지 통계적으로 증명합니다.
+                    </p>
+                </div>
+                <div class="bg-navy-900 border border-navy-800 p-6 rounded-2xl">
+                    <div class="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-scale-balanced text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-100 mb-2">데이터 윤리 의식 함양</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">
+                        편향된 데이터가 기계 학습 및 현대 안전 법제도 설계로 이어질 때 마주하는 윤리적 가치를 성찰하고 엔지니어의 도덕적 책임을 제고합니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 역사적 당위성 섹션 -->
+            <div class="bg-navy-900 border border-navy-800 rounded-2xl overflow-hidden">
+                <div class="p-6 md:p-8 space-y-6">
+                    <h3 class="text-xl font-bold text-slate-50 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-question text-gold-500"></i>
+                        왜 타이타닉 생존 데이터인가?
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed">
+                        타이타닉호의 비극은 인류 역사상 가장 잘 기록된 재난 중 하나입니다. 각 승객의 생사 여부뿐만 아니라 나이, 성별, 지불한 비용, 가족 동반 수까지 정밀하게 보존된 데이터를 지니고 있어 <strong>"사회경제적 계급과 긴급 구난 행동강령 간의 깊은 연관성"</strong>을 밝혀내기에 가장 최적의 표본입니다.
+                    </p>
+                    <div class="border-t border-navy-800 pt-6">
+                        <h4 class="text-sm font-semibold text-gold-500 uppercase tracking-wider mb-3">프로젝트의 핵심 가설</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 bg-navy-950/50 rounded-xl border border-navy-800/50">
+                                <span class="text-xs bg-teal-500/10 text-mint px-2 py-1 rounded font-bold">가설 1</span>
+                                <p class="text-sm text-slate-300 mt-2">"레이디 퍼스트(Lady & Children First) 법칙에 의해 여성과 아동의 생존율이 확실하게 우세할 것이다."</p>
+                            </div>
+                            <div class="p-4 bg-navy-950/50 rounded-xl border border-navy-800/50">
+                                <span class="text-xs bg-gold-500/10 text-gold-500 px-2 py-1 rounded font-bold">가설 2</span>
+                                <p class="text-sm text-slate-300 mt-2">"구명보트 배치 구역과 탈출 우선 경로로 인해, 1등급 승객의 생존율이 하위 등급보다 극적으로 높을 것이다."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 결론과 액션 유도 -->
+            <div class="bg-gradient-to-r from-navy-900 to-navy-800 border border-navy-700/50 rounded-2xl p-6 md:p-8">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-bold text-gold-500 flex items-center gap-2">
+                            <i class="fa-solid fa-trophy"></i>
+                            데이터가 남긴 사회적 메시지 (결론)
+                        </h3>
+                        <p class="text-slate-300 text-sm max-w-2xl">
+                            타이타닉 생존 구조 패턴을 분석한 결과, 극심한 위기에서도 "사회경제적 격차"와 "전통적 약자 보호 가치관(여성/아동 우선)"이 인간 행동에 강력하게 작용했음을 증명했습니다. 기술 혁신과 사회 복지 제도가 구축된 현대 사회에도 여전히 시사하는 바가 큽니다.
+                        </p>
+                    </div>
+                    <button onclick="switchTab('tab-dashboard')" class="bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold px-6 py-3 rounded-xl shadow-lg shadow-gold-500/15 flex items-center gap-2 transition whitespace-nowrap">
+                        <span>시각화 확인하기</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: DASHBOARD (시각화 & 분석) ================= -->
+        <section id="tab-dashboard" class="tab-content space-y-8 hidden">
+            <div class="border-b border-navy-800 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="text-gold-500 font-bold text-sm uppercase tracking-wider">VISUAL ANALYTICS</span>
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-slate-50 mt-1">2. 데이터 시각화 및 상관성 분석</h2>
+                </div>
+                <div class="text-sm text-slate-400 bg-navy-900 px-4 py-2 rounded-xl border border-navy-800">
+                    <i class="fa-solid fa-database text-teal-400 mr-2"></i>총 승객 표본: 891명 기준
+                </div>
+            </div>
+
+            <!-- 주요 통계 수치 대시보드 -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-navy-900 border border-navy-800 p-5 rounded-2xl">
+                    <p class="text-slate-400 text-xs">전체 생존율</p>
+                    <p class="text-3xl font-extrabold text-gold-500 mt-2 font-montserrat">38.4%</p>
+                    <div class="w-full bg-navy-950 h-1.5 rounded-full mt-3 overflow-hidden">
+                        <div class="bg-gold-500 h-full rounded-full" style="width: 38.4%"></div>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-2">전체 891명 중 342명 생존</p>
+                </div>
+                <div class="bg-navy-900 border border-navy-800 p-5 rounded-2xl">
+                    <p class="text-slate-400 text-xs">여성 생존율</p>
+                    <p class="text-3xl font-extrabold text-teal-400 mt-2 font-montserrat">74.2%</p>
+                    <div class="w-full bg-navy-950 h-1.5 rounded-full mt-3 overflow-hidden">
+                        <div class="bg-teal-400 h-full rounded-full" style="width: 74.2%"></div>
+                    </div>
+                    <p class="text-[10px] text-teal-500/70 mt-2">구조 우선순위 제1법칙</p>
+                </div>
+                <div class="bg-navy-900 border border-navy-800 p-5 rounded-2xl">
+                    <p class="text-slate-400 text-xs">1등급 객실 생존율</p>
+                    <p class="text-3xl font-extrabold text-purple-400 mt-2 font-montserrat">62.9%</p>
+                    <div class="w-full bg-navy-950 h-1.5 rounded-full mt-3 overflow-hidden">
+                        <div class="bg-purple-400 h-full rounded-full" style="width: 62.9%"></div>
+                    </div>
+                    <p class="text-[10px] text-purple-400/70 mt-2">상위 계급의 높은 생존 기회</p>
+                </div>
+                <div class="bg-navy-900 border border-navy-800 p-5 rounded-2xl">
+                    <p class="text-slate-400 text-xs">3등급 객실 생존율</p>
+                    <p class="text-3xl font-extrabold text-rose-400 mt-2 font-montserrat">24.2%</p>
+                    <div class="w-full bg-navy-950 h-1.5 rounded-full mt-3 overflow-hidden">
+                        <div class="bg-rose-400 h-full rounded-full" style="width: 24.2%"></div>
+                    </div>
+                    <p class="text-[10px] text-rose-500/70 mt-2">탈출 접근성 불평등 증명</p>
+                </div>
+            </div>
+
+            <!-- 차트 구획 그리드 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 차트 1: 성별 및 객실 등급별 생존 비율 -->
+                <div class="bg-navy-900 border border-navy-800 rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-lg text-slate-100">성별 생존수 비교</h3>
+                        <span class="text-xs bg-teal-500/10 text-teal-400 px-2 py-1 rounded">성별 압도적 차이</span>
+                    </div>
+                    <div class="relative" style="height: 280px;">
+                        <canvas id="genderChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 차트 2: 객실 등급별 생존 vs 사망 비율 -->
+                <div class="bg-navy-900 border border-navy-800 rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-lg text-slate-100">객실 등급별 구조 성공률</h3>
+                        <span class="text-xs bg-purple-500/10 text-purple-400 px-2 py-1 rounded">경제적 가치</span>
+                    </div>
+                    <div class="relative" style="height: 280px;">
+                        <canvas id="classChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 차트 영역 2: 연령대별 분포 -->
+            <div class="bg-navy-900 border border-navy-800 rounded-2xl p-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-6">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-100">연령대별 생존자수 추이</h3>
+                        <p class="text-xs text-slate-400 mt-1">영유아 구조 우선 정책 및 생존 능력의 변곡점을 시각화합니다.</p>
+                    </div>
+                    <span class="text-xs bg-gold-500/10 text-gold-500 px-2.5 py-1 rounded-full font-bold">인구 통계 모델</span>
+                </div>
+                <div class="relative" style="height: 320px;">
+                    <canvas id="ageChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 시각화에 따른 심층 분석 내용 -->
+            <div class="bg-navy-900 border border-navy-800 rounded-2xl p-6 md:p-8 space-y-6">
+                <h3 class="text-xl font-bold text-slate-50 flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass-chart text-teal-400"></i>
+                    3. 심층 분석 및 데이터가 말하는 법칙
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-2">
+                        <h4 class="text-slate-200 font-bold flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-teal-400"></span>여성 우선 구조 원칙
+                        </h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            여성 승객은 단 314명이었으나 그 중 무려 <strong>233명(74.2%)</strong>이 구명보트를 탔습니다. 반면 남성은 577명 중 <strong>109명(18.9%)</strong>만 생존하였습니다. 이는 전통적인 영미권의 '여성과 아동 보호' 가치관이 구난 현장에서 철저하게 통제 수단으로 작동했음을 뜻합니다.
+                        </p>
+                    </div>
+                    <div class="space-y-2">
+                        <h4 class="text-slate-200 font-bold flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>물리적 격차가 빚은 결과
+                        </h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            1등급 승객의 생존율은 <strong>62.9%</strong>에 이르렀으나, 3등급은 <strong>24.2%</strong>로 참담한 수준이었습니다. 3등급 승객은 선박 하단부의 방대한 밀폐 격실에 위치했었고, 갑판으로 이르는 탈출로에 도달하기 위한 선적 안내를 제대로 받지 못해 정보와 거리적 불평등을 겪었습니다.
+                        </p>
+                    </div>
+                    <div class="space-y-2">
+                        <h4 class="text-slate-200 font-bold flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-gold-500"></span>어린 생명 우선의 예외성
+                        </h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            연령대 분포 중 <strong>10세 미만의 영유아</strong>들은 약 60%에 이르는 아주 높은 생존 확률을 가졌습니다. 비극 속에서도 공동체가 최약자인 어린 생명을 보호하기 위해 막중한 책임감을 발휘했음을 지지하는 결정적 지표입니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: EXPLORER (데이터 탐색) ================= -->
+        <section id="tab-explorer" class="tab-content space-y-6 hidden">
+            <div class="border-b border-navy-800 pb-6">
+                <span class="text-gold-500 font-bold text-sm uppercase tracking-wider">HISTORIC DATASET</span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-50 mt-1">실제 승객 원천 데이터 탐색기</h2>
+                <p class="text-sm text-slate-400 mt-2">타이타닉 승객 데이터 중 검증된 표본 데이터를 인터랙티브하게 필터링하여 탐색해 볼 수 있습니다.</p>
+            </div>
+
+            <!-- 필터 제어 패널 -->
+            <div class="bg-navy-900 border border-navy-800 p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
+                <!-- 검색창 -->
+                <div class="relative w-full md:w-72">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="explorer-search" oninput="filterPassengers()" placeholder="승객 이름 검색..." class="w-full bg-navy-950 text-slate-100 pl-10 pr-4 py-2.5 rounded-xl border border-navy-800 focus:outline-none focus:border-gold-500 text-sm transition">
+                </div>
+                
+                <!-- 필터 셀렉트 리스트 -->
+                <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                    <!-- 성별 필터 -->
+                    <select id="filter-gender" onchange="filterPassengers()" class="bg-navy-950 text-slate-300 border border-navy-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:border-gold-500 flex-grow md:flex-grow-0">
+                        <option value="all">모든 성별</option>
+                        <option value="female">여성 (Female)</option>
+                        <option value="male">남성 (Male)</option>
+                    </select>
+
+                    <!-- 등급 필터 -->
+                    <select id="filter-class" onchange="filterPassengers()" class="bg-navy-950 text-slate-300 border border-navy-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:border-gold-500 flex-grow md:flex-grow-0">
+                        <option value="all">모든 등급</option>
+                        <option value="1">1등급 객실</option>
+                        <option value="2">2등급 객실</option>
+                        <option value="3">3등급 객실</option>
+                    </select>
+
+                    <!-- 결과 필터 -->
+                    <select id="filter-status" onchange="filterPassengers()" class="bg-navy-950 text-slate-300 border border-navy-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:border-gold-500 flex-grow md:flex-grow-0">
+                        <option value="all">생존 상태</option>
+                        <option value="1">생존자 (Survived)</option>
+                        <option value="0">사망자 (Perished)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 데이터 테이블 목록 -->
+            <div class="bg-navy-900 border border-navy-800 rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-navy-950/60 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-navy-800">
+                                <th class="p-4">승객 이름</th>
+                                <th class="p-4">성별</th>
+                                <th class="p-4">나이</th>
+                                <th class="p-4">객실 등급</th>
+                                <th class="p-4">동반 가족</th>
+                                <th class="p-4">운임 (Fare)</th>
+                                <th class="p-4">결과</th>
+                            </tr>
+                        </thead>
+                        <tbody id="passenger-table-body" class="divide-y divide-navy-800/60 text-sm">
+                            <!-- JS에 의해 데이터 렌더링 -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- 결과 없을 때의 피드백 UI -->
+                <div id="no-results" class="hidden p-12 text-center text-slate-500">
+                    <i class="fa-solid fa-ghost text-4xl mb-3"></i>
+                    <p>조건에 맞는 승객 데이터를 찾을 수 없습니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: ETHICS NOTEBOOK (윤리 노트북) ================= -->
+        <!-- 이 탭은 "image_58a406.png" 이미지 레이아웃과 텍스트 내용을 한 치의 오차 없이 재현하고 고유의 AI 진단 기능을 연동한 세션입니다. -->
+        <section id="tab-ethics" class="tab-content space-y-8 hidden">
+            <div class="border-b border-navy-800 pb-6">
+                <span class="text-gold-500 font-bold text-sm uppercase tracking-wider">ETHICS WORKBOOK</span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-50 mt-1">2) 생각하는 윤리 노트북</h2>
+                <p class="text-slate-400 mt-4 leading-relaxed max-w-4xl">
+                    위 차트의 격차 분석 결과를 토대로 다음 두 가지 질문에 대해 본인의 철학을 직접 작성해 주세요.<br>
+                    <span class="text-gold-500 font-medium">'윤리 검토 요청'</span> 버튼을 클릭하면 현대 윤리 헌장 및 법제도 가이드를 준수한 정밀 AI 자가진단 피드백을 실시간으로 도출합니다.
+                </p>
+            </div>
+
+            <!-- 두 개의 생각 카드 구획 (image_58a406.png 완벽 이식) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 질문 1 -->
+                <div class="notebook-card bg-navy-900 border border-navy-800 p-8 rounded-3xl space-y-6 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <span class="bg-gold-500 text-navy-950 text-xs font-black px-2 py-1 rounded">Q1</span>
+                            <h3 class="text-xl font-bold text-slate-50 flex items-center gap-2">
+                                <i class="fa-regular fa-lightbulb text-gold-500"></i>
+                                질문 1. 공간적 불평등과 인간 생명권
+                            </h3>
+                        </div>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            3등석 승객들은 대피 정보 차단과 해치 폐쇄로 구조 기회를 상실했습니다. 자본의 가치에 따라 대피 인프라 차별이 허용되는 한계를 막기 위해 현대 사회는 어떤 안전 법률 및 제도를 마련해야 할까요?
+                        </p>
+                    </div>
+                    <div class="mt-4 flex-grow">
+                        <textarea id="ethics-q1" placeholder="이곳에 나만의 생각과 구체적인 물리적 예방 대책을 직접 기록해 보세요..." class="w-full h-48 bg-navy-950 border border-navy-800 rounded-2xl p-5 text-sm text-slate-200 focus:outline-none focus:border-gold-500 transition resize-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- 질문 2 -->
+                <div class="notebook-card bg-navy-900 border border-navy-800 p-8 rounded-3xl space-y-6 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <span class="bg-gold-500 text-navy-950 text-xs font-black px-2 py-1 rounded">Q2</span>
+                            <h3 class="text-xl font-bold text-slate-50 flex items-center gap-2">
+                                <i class="fa-regular fa-lightbulb text-gold-500"></i>
+                                질문 2. 불평등 데이터 학습과 AI 공정성
+                            </h3>
+                        </div>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            과거의 비극적 차별이 학습된 AI 예측 모델은 3등석 사회취약계층을 자동으로 구조 대상에서 제외하는 도덕적 문제를 반복합니다. 이를 차단하기 위해 데이터 엔지니어는 어떤 책임을 지녀야 할까요?
+                        </p>
+                    </div>
+                    <div class="mt-4 flex-grow">
+                        <textarea id="ethics-q2" placeholder="이곳에 알고리즘 보정 규칙, 가중치 제어 및 공정성 가치 정립 계획을 직접 서술해 보세요..." class="w-full h-48 bg-navy-950 border border-navy-800 rounded-2xl p-5 text-sm text-slate-200 focus:outline-none focus:border-gold-500 transition resize-none"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단 검토 요청 제어기 -->
+            <div class="space-y-6 pt-4">
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                    <button onclick="requestEthicsEvaluation()" class="w-full sm:w-auto px-10 py-4 bg-gold-500 hover:bg-gold-400 text-navy-950 font-black rounded-2xl shadow-xl shadow-gold-500/20 transition-all flex items-center justify-center gap-3 active:scale-95">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>현대 윤리 가이드 기반 검토 요청</span>
+                    </button>
+                    <span class="text-xs text-slate-500"><i class="fa-solid fa-lock-open mr-1"></i>Gemini 3.1 Flash AI가 실시간 평가 리포트를 도출합니다.</span>
+                </div>
+
+                <!-- AI 정밀 피드백 출력창 (작성 시 스크롤 전환 유도) -->
+                <div id="ethics-feedback" class="hidden bg-navy-900/50 border-2 border-dashed border-navy-800 p-8 rounded-3xl relative overflow-hidden transition-all duration-500">
+                    <i class="fa-solid fa-scale-balanced absolute right-[-10px] bottom-[-20px] text-navy-800/30 text-8xl pointer-events-none"></i>
+                    
+                    <div class="flex flex-col md:flex-row gap-6 relative z-10">
+                        <div id="feedback-icon-container" class="w-16 h-16 bg-gold-500/10 text-gold-500 rounded-2xl flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-microchip text-2xl"></i>
+                        </div>
+                        <div class="space-y-4 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <h4 class="text-lg font-bold text-gold-500 flex items-center gap-2">
+                                    <span class="relative flex h-3 w-3">
+                                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75"></span>
+                                      <span class="relative inline-flex rounded-full h-3 w-3 bg-gold-500"></span>
+                                    </span>
+                                    AI 정밀 자가진단 피드백
+                                </h4>
+                                <div id="evaluation-score" class="text-xs bg-navy-800 text-gold-400 border border-gold-500/30 px-3 py-1 rounded-full font-bold">
+                                    종합 윤리 등급 산정 중...
+                                </div>
+                            </div>
+                            
+                            <div id="feedback-text" class="text-sm text-slate-300 leading-relaxed space-y-4">
+                                <!-- 여기에 AI 분석 텍스트가 바인딩됩니다 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ================= JAVASCRIPT CONTROLLERS ================= -->
+    <script>
+        // ================= 탭 전환 기능 =================
+        function switchTab(tabId) {
+            // 모든 탭 컨텐츠 숨기기
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            // 대상 탭 표시
+            document.getElementById(tabId).classList.remove('hidden');
+
+            // 내비게이션 활성화 클래스 조절
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-navy-800', 'text-gold-500');
+                btn.classList.add('text-slate-400', 'hover:bg-navy-800/50');
+            });
+
+            // 현재 클릭된 탭 활성화
+            let btnId = 'btn-' + tabId.split('-')[1];
+            let activeBtn = document.getElementById(btnId);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400', 'hover:bg-navy-800/50');
+                activeBtn.classList.add('bg-navy-800', 'text-gold-500');
+            }
+        }
+
+        // ================= 데이터 시각화 차트 설정 (Chart.js) =================
+        let charts = {};
+
+        function initCharts() {
+            // 1. 성별 차트
+            const ctxGender = document.getElementById('genderChart').getContext('2d');
+            charts.gender = new Chart(ctxGender, {
+                type: 'bar',
+                data: {
+                    labels: ['여성 (Female)', '남성 (Male)'],
+                    datasets: [
+                        {
+                            label: '생존자',
+                            data: [233, 109],
+                            backgroundColor: '#64ffda',
+                            borderRadius: 6
+                        },
+                        {
+                            label: '사망자',
+                            data: [81, 468],
+                            backgroundColor: '#f06292',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#e6f1ff' } }
+                    },
+                    scales: {
+                        x: { grid: { color: '#112240' }, ticks: { color: '#8892b0' } },
+                        y: { grid: { color: '#112240' }, ticks: { color: '#8892b0' } }
+                    }
+                }
+            });
+
+            // 2. 클래스 차트
+            const ctxClass = document.getElementById('classChart').getContext('2d');
+            charts.class = new Chart(ctxClass, {
+                type: 'doughnut',
+                data: {
+                    labels: ['1등급 생존', '1등급 사망', '3등급 생존', '3등급 사망'],
+                    datasets: [{
+                        data: [136, 80, 119, 372],
+                        backgroundColor: ['#c5a059', '#112240', '#64ffda', '#f06292'],
+                        borderWidth: 2,
+                        borderColor: '#0a192f'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#e6f1ff' } }
+                    }
+                }
+            });
+
+            // 3. 연령대 차트
+            const ctxAge = document.getElementById('ageChart').getContext('2d');
+            charts.age = new Chart(ctxAge, {
+                type: 'line',
+                data: {
+                    labels: ['0-10세', '11-20세', '21-30세', '31-40세', '41-50세', '51-60세', '61세 이상'],
+                    datasets: [
+                        {
+                            label: '생존자 수',
+                            data: [38, 44, 84, 69, 41, 25, 41],
+                            borderColor: '#64ffda',
+                            backgroundColor: 'rgba(100, 255, 218, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: '사망자 수',
+                            data: [26, 71, 146, 86, 69, 42, 115],
+                            borderColor: '#f06292',
+                            backgroundColor: 'rgba(240, 98, 146, 0.05)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#e6f1ff' } }
+                    },
+                    scales: {
+                        x: { grid: { color: '#112240' }, ticks: { color: '#8892b0' } },
+                        y: { grid: { color: '#112240' }, ticks: { color: '#8892b0' } }
+                    }
+                }
+            });
+        }
+
+        // ================= 승객 샘플 데이터 탐색기 로직 =================
+        const mockPassengers = [
+            { name: "John Jacob Astor IV", gender: "male", age: 47, pclass: 1, family: 1, fare: 227.5, survived: 0 },
+            { name: "Margaret Brown (Molly)", gender: "female", age: 44, pclass: 1, family: 0, fare: 57.7, survived: 1 },
+            { name: "Thomas Andrews (Builder)", gender: "male", age: 39, pclass: 1, family: 0, fare: 0.0, survived: 0 },
+            { name: "Charlotte Cardeza", gender: "female", age: 58, pclass: 1, family: 1, fare: 512.3, survived: 1 },
+            { name: "Michel Navratil", gender: "male", age: 32, pclass: 2, family: 2, fare: 26.0, survived: 0 },
+            { name: "Lawrence Beesley", gender: "male", age: 34, pclass: 2, family: 0, fare: 13.0, survived: 1 },
+            { name: "Millvina Dean", gender: "female", age: 0.2, pclass: 3, family: 3, fare: 20.5, survived: 1 },
+            { name: "William Henry Allen", gender: "male", age: 35, pclass: 3, family: 0, fare: 8.0, survived: 0 },
+            { name: "Juha Niilo Panula", gender: "male", age: 7, pclass: 3, family: 5, fare: 39.6, survived: 0 },
+            { name: "Elisabeth Walton Allen", gender: "female", age: 29, pclass: 1, family: 0, fare: 211.3, survived: 1 },
+            { name: "Archibald Gracie IV", gender: "male", age: 53, pclass: 1, family: 0, fare: 110.8, survived: 1 },
+            { name: "Olaus Abelseth", gender: "male", age: 25, pclass: 3, family: 0, fare: 7.6, survived: 1 },
+            { name: "Rhoda Abbott", gender: "female", age: 39, pclass: 3, family: 2, fare: 20.2, survived: 1 },
+            { name: "Richard Harris", gender: "male", age: 29, pclass: 3, family: 0, fare: 7.9, survived: 0 },
+            { name: "Herman Klaber", gender: "male", age: 41, pclass: 1, family: 0, fare: 26.5, survived: 0 },
+            { name: "Helen Bishop", gender: "female", age: 19, pclass: 1, family: 1, fare: 91.0, survived: 1 }
+        ];
+
+        function filterPassengers() {
+            const searchVal = document.getElementById('explorer-search').value.toLowerCase();
+            const genderVal = document.getElementById('filter-gender').value;
+            const classVal = document.getElementById('filter-class').value;
+            const statusVal = document.getElementById('filter-status').value;
+
+            const filtered = mockPassengers.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchVal);
+                const matchesGender = (genderVal === 'all') || (p.gender === genderVal);
+                const matchesClass = (classVal === 'all') || (p.pclass === parseInt(classVal));
+                const matchesStatus = (statusVal === 'all') || (p.survived === parseInt(statusVal));
+                return matchesSearch && matchesGender && matchesClass && matchesStatus;
+            });
+
+            renderPassengerTable(filtered);
+        }
+
+        function renderPassengerTable(data) {
+            const tableBody = document.getElementById('passenger-table-body');
+            const noResults = document.getElementById('no-results');
+            tableBody.innerHTML = '';
+
+            if (data.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                noResults.classList.add('hidden');
+            }
+
+            data.forEach(p => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-navy-800/40 transition";
+                
+                const badgeClass = p.survived === 1 
+                    ? "bg-teal-500/10 text-mint border border-teal-500/20" 
+                    : "bg-rose-500/10 text-rose-400 border border-rose-500/20";
+                
+                const statusText = p.survived === 1 ? "생존" : "사망";
+
+                row.innerHTML = `
+                    <td class="p-4 font-semibold text-slate-100">${p.name}</td>
+                    <td class="p-4 text-slate-400">${p.gender === 'female' ? '여성' : '남성'}</td>
+                    <td class="p-4 text-slate-400">${p.age}세</td>
+                    <td class="p-4"><span class="text-xs border border-navy-700 bg-navy-950 px-2.5 py-1 rounded-full font-bold text-gold-500">${p.pclass}등석</span></td>
+                    <td class="p-4 text-slate-400">${p.family}명</td>
+                    <td class="p-4 font-mono text-slate-300">$${p.fare.toFixed(1)}</td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded text-xs font-bold ${badgeClass}">${statusText}</span></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // ================= 생각하는 윤리 노트북 AI 자가진단 피드백 로직 =================
+        async function requestEthicsEvaluation() {
+            const q1Answer = document.getElementById('ethics-q1').value.trim();
+            const q2Answer = document.getElementById('ethics-q2').value.trim();
+
+            const feedbackContainer = document.getElementById('ethics-feedback');
+            const feedbackText = document.getElementById('feedback-text');
+            const scoreBadge = document.getElementById('evaluation-score');
+            const iconContainer = document.getElementById('feedback-icon-container');
+
+            if (!q1Answer && !q2Answer) {
+                feedbackContainer.classList.remove('hidden');
+                feedbackText.innerHTML = `
+                    <div class="text-rose-400 font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        성찰 답변이 비어 있습니다.
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">두 질문 중 최소 하나 이상 본인의 생각을 입력해 주셔야 정밀 피드백을 활성화할 수 있습니다.</p>
+                `;
+                scoreBadge.innerText = "대기 중";
+                scoreBadge.className = "text-xs bg-navy-800 text-slate-400 border border-slate-700 px-3 py-1 rounded-full font-bold";
+                return;
+            }
+
+            // UI 로딩 상태 변경
+            feedbackContainer.classList.remove('hidden');
+            scoreBadge.innerText = "AI 검토 중...";
+            scoreBadge.className = "text-xs bg-navy-800 text-yellow-500 border border-yellow-500/30 px-3 py-1 rounded-full font-bold";
+            iconContainer.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-2xl text-gold-500"></i>`;
+            feedbackText.innerHTML = `
+                <div class="flex items-center gap-3 text-slate-300">
+                    <p>현대 윤리 헌장 가이드라인 및 SOLAS(해상인명안전) 국제 표준에 입각하여 서술하신 내용을 실시간 정밀 교정 중입니다. 잠시만 기다려 주세요...</p>
+                </div>
+            `;
+
+            const systemPrompt = `
+                당신은 세계적인 해상인명안전제도 전문가이자, 국제 AI 알고리즘 공정성 검증 전문 위원입니다.
+                사용자가 타이타닉 데이터의 격차(성별/객실등급별 격차)를 본 후, 공간적 불평등과 AI 편향성 데이터에 관해 서술한 윤리 성찰문을 읽고
+                1) 아주 전문적이고 정교하게 격려 및 분석 피드백을 제공하고
+                2) 가이드라인 준수도에 따른 윤리 종합 등급(EXCELLENT, GOOD, IMPROVABLE 중 하나)을 산정하십시오.
+                반드시 사용자에게 도움이 되는 격조 높고 따뜻하면서도 분석적인 한국어 문체로 문장을 구성하세요.
+                TailwindCSS 스타일을 적용할 수 있는 잘 구획된 HTML 형태로 답변하십시오.
+            `;
+
+            const userPrompt = `
+                [질문 1. 공간적 불평등과 현대 안전제도에 대한 사용자의 성찰 답변]:
+                "${q1Answer || "(사용자가 아직 답변을 작성하지 않았습니다)"}"
+
+                [질문 2. AI 예측 알고리즘 공정성과 데이터 엔지니어 책임에 대한 사용자의 성찰 답변]:
+                "${q2Answer || "(사용자가 아직 답변을 작성하지 않았습니다)"}"
+
+                이 답변들을 윤리적으로 검토하고, 질문 1과 질문 2에 대한 각각의 전문적 비평을 피드백해 주십시오. 
+                출력 형식은 다음 세 구역을 포함하여 깔끔하고 구조화된 HTML 요소를 반환하십시오:
+                - **1구역**: 공간 불평등 & 대피 인프라 안전 규제 제도 측면의 평가와 현실적 예방법 피드백 (SOLAS 협약, 재난 취약 계층 등 연계)
+                - **2구역**: AI 공정성 & 편향 데이터 교정 책임 측면의 평가와 조언 (알고리즘 편향 완화 기법 등 연계)
+                - **3구역**: 등급 판정 (EXCELLENT / GOOD / IMPROVABLE 중 하나)과 한 줄 격려 메시지
+                주의: JSON이 아닌, 피드백 텍스트 컨텐츠 자체로 HTML 태그를 적절히 활용하여 응답을 주십시오. 등급 판정은 분석 내용의 완성도를 고려하여 부여해 주세요.
+            `;
+
+            try {
+                const apiKey = ""; // Canvas 환경에서 자동 주입
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userPrompt }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+
+                let response;
+                let delay = 1000;
+                const maxRetries = 3;
+
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if (response.ok) break;
+                    } catch (err) {
+                        if (i === maxRetries - 1) throw err;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                    }
+                }
+
+                const result = await response.json();
+                const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (aiText) {
+                    // 등급 추출용 파싱 시도
+                    let grade = "GOOD";
+                    if (aiText.includes("EXCELLENT")) {
+                        grade = "EXCELLENT";
+                    } else if (aiText.includes("IMPROVABLE")) {
+                        grade = "IMPROVABLE";
+                    }
+
+                    // 등급 디자인 바인딩
+                    let gradeClass = "bg-teal-500/10 text-mint border border-teal-500/20";
+                    if (grade === "EXCELLENT") {
+                        gradeClass = "bg-gold-500/10 text-gold-400 border border-gold-500/30";
+                    } else if (grade === "IMPROVABLE") {
+                        gradeClass = "bg-rose-500/10 text-rose-400 border border-rose-500/20";
+                    }
+
+                    scoreBadge.innerText = `등급: ${grade}`;
+                    scoreBadge.className = `text-xs px-3 py-1 rounded-full font-bold ${gradeClass}`;
+                    iconContainer.innerHTML = `<i class="fa-solid fa-graduation-cap text-2xl text-gold-500"></i>`;
+                    feedbackText.innerHTML = aiText;
+                } else {
+                    throw new Error("AI가 유효한 분석 응답을 반환하지 못했습니다.");
+                }
+
+            } catch (error) {
+                console.error("Gemini API call failed, switching to local offline analyzer...", error);
+                runOfflineEvaluation(q1Answer, q2Answer);
+            }
+        }
+
+        // ================= 오프라인 대체 연산 분석 엔진 =================
+        function runOfflineEvaluation(q1, q2) {
+            const feedbackText = document.getElementById('feedback-text');
+            const scoreBadge = document.getElementById('evaluation-score');
+            const iconContainer = document.getElementById('feedback-icon-container');
+
+            let score = 50;
+            let q1Feedback = "";
+            let q2Feedback = "";
+
+            // Q1 로컬 정밀 키워드 채점식 분석
+            if (q1.length > 20) {
+                score += 20;
+                if (q1.includes("법") || q1.includes("제도") || q1.includes("의무") || q1.includes("SOLAS")) {
+                    score += 10;
+                    q1Feedback = "현대 해상안전의 근간이 되는 '법제도적 강제력 보장'의 중요성을 매우 날카롭게 간파하셨습니다. 작성해주신 바와 같이 현대의 대피 정보 불평등을 해결하기 위해서는 대피 인프라 설계 단계에서부터 모든 계층의 동선을 무차별적으로 보장하는 설계적 검증이 법제도화되어야 합니다.";
+                } else {
+                    q1Feedback = "물리적인 안전 인프라의 투명성과 구명 물자 확보의 보편적 주권에 대해 성찰해주셨습니다. 자본주의적 가치 논리가 생명존엄성보다 앞서지 않도록 하는 안전 인프라 가이드라인 정립의 주춧돌이 되는 생각입니다.";
+                }
+            } else {
+                q1Feedback = "질문 1에 대한 성찰이 조금 짧습니다. 자본의 논리가 생명의 대피 인프라(해치, 경로 차단 등) 설계에 미치는 공간적 불평등을 방지하기 위한 법률적 의무 규제 등을 보강해 보십시오.";
+            }
+
+            // Q2 로컬 정밀 키워드 채점식 분석
+            if (q2.length > 20) {
+                score += 20;
+                if (q2.includes("편향") || q2.includes("가중치") || q2.includes("검증") || q2.includes("공정")) {
+                    score += 10;
+                    q2Feedback = "AI 공정성을 위한 '데이터 정제 및 알고리즘 보정 의무'에 대해 대단히 훌륭한 수준으로 서술하셨습니다. 데이터 엔지니어는 단순히 기계적인 학습 결과를 배출하는 것을 넘어, 역사 속에서 발생한 계급적·성별적 편향성을 보정하는 '적극적 보정 알고리즘'을 도입할 중대한 윤리적 임무를 지닙니다.";
+                } else {
+                    q2Feedback = "과거의 비극적 차별이 데이터라는 옷을 입고 미래로 이전되는 것을 방어해야 한다는 분석가적 문제의식을 우수하게 설명하셨습니다. 기계적 학습이 가져올 차별의 고착화를 끊어내는 엔지니어의 비판적 시각을 더욱 정교화해보시기 바랍니다.";
+                }
+            } else {
+                q2Feedback = "질문 2에 대한 성찰이 다소 보강이 필요합니다. 역사적 차별이 포함된 데이터셋을 가중치 조정 및 알고리즘적 교정 없이 있는 그대로 학습시켰을 때 발생하는 '도덕적 루프'와 책임성에 초점을 맞춰보세요.";
+            }
+
+            // 최종 평가 등급 산출
+            let finalGrade = "GOOD";
+            let gradeClass = "bg-teal-500/10 text-mint border border-teal-500/20";
+            if (score >= 90) {
+                finalGrade = "EXCELLENT";
+                gradeClass = "bg-gold-500/10 text-gold-400 border border-gold-500/30";
+            } else if (score < 70) {
+                finalGrade = "IMPROVABLE";
+                gradeClass = "bg-rose-500/10 text-rose-400 border border-rose-500/20";
+            }
+
+            setTimeout(() => {
+                scoreBadge.innerText = `등급: ${finalGrade}`;
+                scoreBadge.className = `text-xs px-3 py-1 rounded-full font-bold ${gradeClass}`;
+                iconContainer.innerHTML = `<i class="fa-solid fa-graduation-cap text-2xl text-gold-500"></i>`;
+                feedbackText.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="p-4 bg-navy-950/40 rounded-xl border border-navy-800">
+                            <h5 class="font-bold text-slate-100 flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-gold-500"></span>공간적 생명권 성찰 평가</h5>
+                            <p class="text-xs text-slate-300 leading-relaxed">${q1Feedback}</p>
+                        </div>
+                        <div class="p-4 bg-navy-950/40 rounded-xl border border-navy-800">
+                            <h5 class="font-bold text-slate-100 flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-gold-500"></span>AI 알고리즘 정의 성찰 평가</h5>
+                            <p class="text-xs text-slate-300 leading-relaxed">${q2Feedback}</p>
+                        </div>
+                        <div class="pt-2 text-xs text-gold-500 italic">
+                            💡 오프라인 자가 분석 엔진 조언: "인구통계학적 특성이 생존에 무작위로 관여하지 않은 것과 같이, 분석 설계자의 비판적 사고 역시 알고리즘 설계에 우연히 개입되어서는 안 됩니다."
+                        </div>
+                    </div>
+                `;
+            }, 800);
+        }
+
+        // ================= 페이지 구동 초기화 로직 =================
+        window.onload = function() {
+            initCharts();
+            renderPassengerTable(mockPassengers);
+        }
+    </script>
+</body>
+</html>
